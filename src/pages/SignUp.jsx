@@ -3,6 +3,11 @@ import { useState } from 'react'
 import {AiFillEyeInvisible, AiFillEye} from 'react-icons/ai'
 import { Link } from 'react-router-dom'
 import OAuth from '../components/OAuth'
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
+import { db } from '../firebase'
+import { serverTimestamp, setDoc, doc } from 'firebase/firestore'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -10,15 +15,37 @@ const SignUp = () => {
     email: '',
     password: ''
   })
-  const [showPassword, setShowPassword] = useState(true
-    )
+  const [showPassword, setShowPassword] = useState(false)
   const { username, email, password} = formData
+  const navigate = useNavigate()
 
   const onChange = (e) => {
     setFormData((prevState) => ({
         ...prevState, 
         [e.target.id]: e.target.value
     }))
+  }
+
+  const onSubmit = async (e) => {
+    e.preventDefault()
+
+    try {
+      const auth = getAuth()
+      const userCredentials = await createUserWithEmailAndPassword(auth, email, password)
+
+      updateProfile(auth.currentUser, {
+        displayName: username
+      })
+      const user = userCredentials.user
+      const formDataCopy = {...formData}
+      formDataCopy.timestamp = serverTimestamp()
+      toast.success('Sign up was successful')
+      navigate('/')
+      
+      await setDoc(doc(db, "users", user.uid), formDataCopy)
+      } catch (error) {
+        toast.error("something went wrong with the registration")
+    }
   }
 
   return (
@@ -34,7 +61,7 @@ const SignUp = () => {
 
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form>
+          <form onSubmit={onSubmit}>
           <input className='w-full px-4 py-2 text-xl
              text-gray-700 bg-white border-gray-300
              rounded transition ease-in-out mb-6' 
