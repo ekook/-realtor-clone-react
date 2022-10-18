@@ -33,7 +33,7 @@ function App() {
       pauseOnFocusLoss
       draggable
       pauseOnHover
-      theme="Dark"
+      theme="dark"
       />
       {/* Same as */}
   <ToastContainer />
